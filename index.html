@@ -35,10 +35,36 @@
     </div>
 </div>
 
+    <div>
+        <h2>DaProfiler</h2>
+        <div class="input-group mb-3">
+            <input type="text" id="daprofiler-firstname" class="form-control" placeholder="First Name">
+            <input type="text" id="daprofiler-lastname" class="form-control" placeholder="Last Name">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" onclick="runDaProfiler()">Search</button>
+            </div>
+        </div>
+        <div id="daprofiler-loading" style="display:none;">Loading...</div>
+        <pre id="daprofiler-result" class="border p-3"></pre>
+    </div>
+
+    <div>
+        <h2>Maigret</h2>
+        <div class="input-group mb-3">
+            <input type="text" id="maigret-username" class="form-control" placeholder="Username">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" onclick="runMaigret()">Search</button>
+            </div>
+        </div>
+        <div id="maigret-loading" style="display:none;">Loading...</div>
+        <pre id="maigret-result" class="border p-3"></pre>
+    </div>
+
 <script>
-    function checkTaskStatus(taskId, resultElementId, loadingElementId) {
+
+    function checkTaskStatus(endpoint, taskId, resultElementId, loadingElementId) {
         $.ajax({
-            url: `/api/sherlock/status/${taskId}`,
+            url: `/api/${endpoint}/status/${taskId}`,
             method: 'GET',
             success: function(data) {
                 if (data.status === 'SUCCESS') {
@@ -48,7 +74,7 @@
                     $(`#${resultElementId}`).text("Error occurred.");
                     $(`#${loadingElementId}`).hide();
                 } else {
-                    setTimeout(() => checkTaskStatus(taskId, resultElementId, loadingElementId), 2000);
+                    setTimeout(() => checkTaskStatus(endpoint, taskId, resultElementId, loadingElementId), 2000);
                 }
             }
         });
@@ -63,7 +89,7 @@
             data: JSON.stringify({username: username}),
             contentType: 'application/json',
             success: function(data) {
-                checkTaskStatus(data.task_id, 'sherlock-result', 'sherlock-loading');
+                checkTaskStatus('sherlock', data.task_id, 'sherlock-result', 'sherlock-loading');
             }
         });
     }
@@ -77,10 +103,40 @@
             data: JSON.stringify({email: email}),
             contentType: 'application/json',
             success: function(data) {
-                checkTaskStatus(data.task_id, 'holehe-result', 'holehe-loading');
+                checkTaskStatus('holehe', data.task_id, 'holehe-result', 'holehe-loading');
             }
         });
     }
+
+    function runDaProfiler() {
+        let firstName = $('#daprofiler-firstname').val();
+        let lastName = $('#daprofiler-lastname').val();
+        $('#daprofiler-loading').show();
+        $.ajax({
+            url: '/api/daprofiler',
+            method: 'POST',
+            data: JSON.stringify({first_name: firstName, last_name: lastName}),
+            contentType: 'application/json',
+            success: function(data) {
+                checkTaskStatus('daprofiler', data.task_id, 'daprofiler-result', 'daprofiler-loading');
+            }
+        });
+    }
+
+    function runMaigret() {
+        let username = $('#maigret-username').val();
+        $('#maigret-loading').show();
+        $.ajax({
+            url: '/api/maigret',
+            method: 'POST',
+            data: JSON.stringify({username: username}),
+            contentType: 'application/json',
+            success: function(data) {
+                checkTaskStatus('maigret', data.task_id, 'maigret-result', 'maigret-loading');
+            }
+        });
+    }
+
 </script>
 </body>
 </html>
