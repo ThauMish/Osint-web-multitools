@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSINT Tools</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body class="p-5">
+
+<div class="container">
+    <div class="mb-5">
+        <h2>Sherlock</h2>
+        <div class="input-group mb-3">
+            <input type="text" id="sherlock-username" class="form-control" placeholder="Username">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" onclick="runSherlock()">Search</button>
+            </div>
+        </div>
+        <div id="sherlock-loading" style="display:none;">Loading...</div>
+        <pre id="sherlock-result" class="border p-3"></pre>
+    </div>
+
+    <div>
+        <h2>Holehe</h2>
+        <div class="input-group mb-3">
+            <input type="text" id="holehe-email" class="form-control" placeholder="Email">
+            <div class="input-group-append">
+                <button class="btn btn-outline-secondary" onclick="runHolehe()">Search</button>
+            </div>
+        </div>
+        <div id="holehe-loading" style="display:none;">Loading...</div>
+        <pre id="holehe-result" class="border p-3"></pre>
+    </div>
+</div>
+
+<script>
+    function checkTaskStatus(taskId, resultElementId, loadingElementId) {
+        $.ajax({
+            url: `/api/sherlock/status/${taskId}`,
+            method: 'GET',
+            success: function(data) {
+                if (data.status === 'SUCCESS') {
+                    $(`#${resultElementId}`).text(data.result);
+                    $(`#${loadingElementId}`).hide();
+                } else if (data.status === 'FAILURE') {
+                    $(`#${resultElementId}`).text("Error occurred.");
+                    $(`#${loadingElementId}`).hide();
+                } else {
+                    setTimeout(() => checkTaskStatus(taskId, resultElementId, loadingElementId), 2000);
+                }
+            }
+        });
+    }
+
+    function runSherlock() {
+        let username = $('#sherlock-username').val();
+        $('#sherlock-loading').show();
+        $.ajax({
+            url: '/api/sherlock',
+            method: 'POST',
+            data: JSON.stringify({username: username}),
+            contentType: 'application/json',
+            success: function(data) {
+                checkTaskStatus(data.task_id, 'sherlock-result', 'sherlock-loading');
+            }
+        });
+    }
+
+    function runHolehe() {
+        let email = $('#holehe-email').val();
+        $('#holehe-loading').show();
+        $.ajax({
+            url: '/api/holehe',
+            method: 'POST',
+            data: JSON.stringify({email: email}),
+            contentType: 'application/json',
+            success: function(data) {
+                checkTaskStatus(data.task_id, 'holehe-result', 'holehe-loading');
+            }
+        });
+    }
+</script>
+</body>
+</html>
